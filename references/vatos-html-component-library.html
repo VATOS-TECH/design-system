@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>VATOS UI Components — Interactive Summary Table</title>
+<style>
+:root{
+  --dark-navy:#192C4F;
+  --accent-cyan:#23A5B3;
+  --text-graphite:#3D4345;
+  --text-charcoal:#4E5658;
+  --semantic-neutral:#6F7A7D;
+  --semantic-danger:#C62828;
+  --surface-white:#FFFFFF;
+  --surface-bg:#F7F9FA;
+  --surface-soft:#E8EEF0;
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:16px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--surface-bg);color:var(--text-charcoal);
+  font-family:Pretendard,"Noto Sans KR","Malgun Gothic",Arial,sans-serif;
+}
+.wrap{max-width:1280px;margin:0 auto;padding:30px 20px 60px}
+h1{margin:0 0 8px;color:var(--dark-navy);font-size:26px}
+.desc{margin:0 0 22px;color:var(--semantic-neutral);font-size:14px}
+.table-wrap{
+  overflow-x:auto;background:var(--surface-white);
+  border:1px solid var(--surface-soft);border-radius:var(--radius-lg);
+}
+table{width:100%;min-width:980px;border-collapse:collapse}
+th,td{padding:14px;border-bottom:1px solid var(--surface-soft);vertical-align:top;text-align:left}
+th{background:var(--surface-bg);color:var(--text-graphite);font-size:12px}
+td{font-size:13px}
+.name{color:var(--dark-navy);font-weight:700;white-space:nowrap}
+.preview-cell{width:420px}
+.preview{
+  position:relative;min-height:150px;padding:14px;background:var(--surface-bg);
+  border:1px solid var(--surface-soft);border-radius:var(--radius-md);
+}
+.caption{margin:0 0 10px;color:var(--semantic-neutral);font-size:11px}
+
+
+
+/* shared dropdown */
+.dd{position:relative;display:inline-block}
+.dd-trigger{
+  min-height:38px;display:inline-flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:0 12px;border:1px solid var(--surface-soft);
+  border-radius:var(--radius-md);background:var(--surface-white);
+  color:var(--text-charcoal);font:500 12px Pretendard,sans-serif;cursor:pointer;
+}
+.dd-trigger:hover{border-color:var(--text-graphite)}
+.dd-trigger:focus-visible,.dd.open .dd-trigger{outline:none;border-color:var(--accent-cyan)}
+.dd-field{width:160px}
+.dd-icon{width:38px;padding:0;justify-content:center}
+.chev{width:7px;height:7px;border-right:1px solid var(--text-charcoal);border-bottom:1px solid var(--text-charcoal);transform:rotate(45deg)}
+.dd-panel{
+  display:none;position:absolute;top:44px;left:0;z-index:20;
+  min-width:150px;padding:6px 0;background:var(--surface-white);
+  border:1px solid var(--surface-soft);border-radius:var(--radius-lg);
+}
+.dd.open .dd-panel{display:block}
+.dd.icon .dd-panel{left:0;right:auto;width:max-content;min-width:140px;max-width:220px}
+.dd-option{
+  width:100%;min-height:36px;padding:8px 12px;border:0;background:var(--surface-white);
+  color:var(--text-charcoal);font:400 12px Pretendard,sans-serif;text-align:left;cursor:pointer;
+}
+.dd-option:hover,.dd-option:focus-visible{outline:none;background:var(--surface-bg)}
+.dd-option.selected{color:var(--accent-cyan);font-weight:700}
+
+/* tabs */
+.tabs-demo{display:grid;gap:14px}
+.pills{display:flex;gap:6px}
+.pill{
+  padding:7px 10px;border:1px solid var(--surface-soft);border-radius:999px;
+  background:var(--surface-white);font-size:11px;cursor:pointer;
+}
+.pill.active{background:var(--dark-navy);color:var(--surface-white)}
+.underline{display:flex;gap:18px;border-bottom:1px solid var(--surface-soft)}
+.underline button{
+  padding:7px 0;border:0;background:transparent;color:var(--text-charcoal);
+  font:500 11px Pretendard,sans-serif;cursor:pointer;
+}
+.underline button.active{color:var(--dark-navy);font-weight:700;border-bottom:2px solid var(--accent-cyan)}
+.folder-tabs{display:flex;align-items:flex-end;border-bottom:1px solid var(--surface-soft)}
+.folder-tab{
+  position:relative;min-height:36px;padding:0 14px;border:1px solid var(--surface-soft);
+  border-bottom:0;border-radius:var(--radius-sm) var(--radius-sm) 0 0;
+  background:var(--surface-soft);color:var(--semantic-neutral);
+  font:600 11px Pretendard,sans-serif;cursor:pointer;
+}
+.folder-tab + .folder-tab{margin-left:2px}
+.folder-tab.active{
+  z-index:2;background:var(--surface-white);color:var(--dark-navy);
+  font-weight:700;transform:translateY(1px);
+}
+.folder-content{
+  min-height:48px;padding:12px;background:var(--surface-white);
+  border:1px solid var(--surface-soft);border-top:0;
+  border-radius:0 var(--radius-md) var(--radius-md) var(--radius-md);
+  font-size:11px;color:var(--text-charcoal);
+}
+
+/* compact selection */
+.selection{
+  background:var(--surface-white);border:1px solid var(--surface-soft);
+  border-radius:var(--radius-md);overflow:hidden;
+}
+.sel-head{
+  position:relative;display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px;border-bottom:1px solid var(--surface-soft);
+  color:var(--text-graphite);font-size:10px;font-weight:700;
+}
+.sel-list{max-height:135px;overflow-y:auto;padding:6px}
+.sel-item{
+  width:100%;min-height:34px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 8px;border:1px solid transparent;border-radius:var(--radius-sm);
+  background:var(--surface-white);color:var(--text-charcoal);
+  font:500 11px Pretendard,sans-serif;cursor:pointer;
+}
+.sel-item:hover{background:var(--surface-bg)}
+.sel-item[aria-selected=true]{background:var(--surface-bg);color:var(--dark-navy);font-weight:700;border-color:var(--surface-soft)}
+.type{color:var(--semantic-neutral);font-size:9px}
+.filter-dd{position:relative}
+.filter-btn{
+  width:28px;height:28px;border:1px solid var(--surface-soft);border-radius:var(--radius-sm);
+  background:var(--surface-white);cursor:pointer;font-size:13px;
+}
+.filter-btn:hover,.filter-dd.open .filter-btn{border-color:var(--accent-cyan)}
+.filter-menu{
+  display:none;position:absolute;top:32px;left:0;z-index:30;min-width:120px;
+  padding:5px 0;background:var(--surface-white);border:1px solid var(--surface-soft);
+  border-radius:var(--radius-md);
+}
+.filter-dd.open .filter-menu{display:block}
+
+/* catalog */
+.catalog{
+  height:180px;display:flex;flex-direction:column;overflow:hidden;background:var(--surface-white);
+  border:1px solid var(--surface-soft);border-radius:var(--radius-md);
+}
+.catalog-scroll{flex:1;min-height:0;overflow-y:auto;padding:0 8px 8px}
+.catalog-section{
+  position:sticky;top:0;padding:8px 4px 6px;background:var(--surface-white);
+  border-bottom:1px solid var(--surface-soft);font-size:10px;font-weight:700;color:var(--text-graphite);
+}
+.catalog-item{display:flex;justify-content:space-between;padding:7px 4px;font-size:10px}
+.hidden{display:none!important}
+.note{
+  margin-top:18px;padding:13px 15px;background:var(--surface-white);
+  border-left:4px solid var(--accent-cyan);font-size:13px;
+}
+
+/* Folder / Index — single continuous content border */
+.folder-tabs{position:relative;display:flex;align-items:flex-end;border-bottom:0!important;z-index:2}
+.folder-tab{position:relative;min-height:36px;border:1px solid var(--surface-soft)!important;border-bottom:0!important;border-radius:var(--radius-sm) var(--radius-sm) 0 0!important;background:var(--surface-soft)!important;color:var(--semantic-neutral)!important;transform:none!important}
+.folder-tab.active{z-index:4!important;background:var(--surface-white)!important;color:var(--dark-navy)!important;font-weight:700!important;margin-bottom:-1px!important;padding-bottom:1px!important}
+.folder-content{position:relative;z-index:1;margin-top:0!important;border:1px solid var(--surface-soft)!important;border-radius:0 var(--radius-md) var(--radius-md) var(--radius-md)!important;background:var(--surface-white)!important}
+
+/* Finalized Checkbox / Radio / Toast / Pagination / Loading / Error */
+.chk-demo,.radio-demo{display:grid;gap:8px;width:100%}
+.chk-row,.radio-row{display:flex;align-items:center;gap:8px;font-size:11px;cursor:pointer}
+.chk-native,.radio-native{position:absolute;opacity:0;pointer-events:none}
+
+.chk-box{
+  width:17px;height:17px;display:grid;place-items:center;flex:none;
+  border:1px solid var(--accent-cyan);border-radius:4px;background:var(--surface-white);
+}
+.chk-row:hover .chk-box{border-color:var(--text-graphite)}
+.chk-row:has(.chk-native:focus-visible) .chk-box{outline:1px solid var(--accent-cyan);outline-offset:2px}
+.chk-native:checked + .chk-box,
+.chk-box.mixed{
+  background:var(--accent-cyan);
+  border-color:var(--accent-cyan);
+}
+.chk-native:checked + .chk-box::after{
+  content:"";
+  width:8px;height:4px;
+  border-left:2px solid var(--surface-white);
+  border-bottom:2px solid var(--surface-white);
+  transform:rotate(-45deg) translateY(-1px);
+}
+.chk-box.mixed::after{
+  content:"";
+  width:8px;height:2px;border-radius:999px;background:var(--surface-white);
+}
+.chk-native:disabled + .chk-box{
+  background:var(--surface-bg);
+  border-color:var(--surface-soft);
+}
+.chk-row:has(.chk-native:disabled){color:var(--semantic-neutral);cursor:not-allowed}
+.chk-note{font-size:9px;color:var(--semantic-neutral)}
+
+.radio-mark{
+  width:17px;height:17px;display:grid;place-items:center;flex:none;
+  border:1px solid var(--semantic-neutral);border-radius:50%;
+  background:var(--surface-white);
+}
+.radio-row:hover .radio-mark{border-color:var(--text-graphite)}
+.radio-row:has(.radio-native:focus-visible) .radio-mark{outline:1px solid var(--accent-cyan);outline-offset:2px}
+.radio-native:checked + .radio-mark{
+  border-color:var(--accent-cyan);
+  background:var(--accent-cyan);
+}
+.radio-native:checked + .radio-mark::after{
+  content:"";
+  width:7px;height:7px;border-radius:50%;
+  background:var(--surface-white);
+}
+.radio-native:disabled + .radio-mark{background:var(--surface-bg);border-color:var(--surface-soft)}
+.radio-row:has(.radio-native:disabled){color:var(--semantic-neutral);cursor:not-allowed}
+
+.toast-demo{width:100%;min-height:72px;display:grid;place-items:center;position:relative}
+.toast-trigger{border:1px solid var(--surface-soft);background:var(--surface-white);border-radius:var(--radius-sm);padding:7px 10px;cursor:pointer}
+.toast-message{position:absolute;top:4px;right:4px;color:var(--dark-navy);font-size:12px;font-weight:700;opacity:0;transform:translateY(-4px);transition:.18s ease;pointer-events:none}
+.toast-message.show{opacity:1;transform:translateY(0)}
+
+.pagination-demo{display:flex;align-items:center;gap:5px}
+.page-btn{min-width:30px;height:30px;border:1px solid var(--surface-soft);border-radius:var(--radius-sm);background:var(--surface-white);cursor:pointer}
+.page-btn.active{background:var(--dark-navy);border-color:var(--dark-navy);color:var(--surface-white);font-weight:700}
+.page-btn:disabled{color:var(--surface-soft);cursor:not-allowed}
+
+.loading-demo{text-align:center;color:var(--text-charcoal);font-size:11px}
+.loading-spinner{width:24px;height:24px;margin:0 auto 8px;border:2px solid var(--surface-soft);border-top-color:var(--accent-cyan);border-radius:50%;animation:vatos-spin .9s linear infinite}
+@keyframes vatos-spin{to{transform:rotate(360deg)}}
+
+.error-demo{
+  width:100%;
+  display:grid;
+  gap:2px;
+  justify-items:center;
+  text-align:center;
+}
+.error-title{
+  color:#C62828;
+  font-size:11px;
+  font-weight:700;
+}
+.error-help{
+  color:var(--semantic-neutral);
+  font-size:10px;
+  font-weight:400;
+}
+
+
+
+.tooltip-mini{position:relative;display:inline-block}
+.tooltip-mini-trigger{
+  min-height:34px;padding:0 10px;border:1px solid var(--surface-soft);
+  border-radius:var(--radius-sm);background:var(--surface-white);
+  color:var(--text-charcoal);font:500 11px Pretendard,sans-serif;cursor:pointer
+}
+.tooltip-mini-bubble{
+  position:absolute;left:50%;bottom:calc(100% + 8px);
+  transform:translateX(-50%) translateY(3px);
+  min-width:max-content;max-width:220px;padding:7px 10px;
+  border:1px solid var(--surface-soft);border-radius:var(--radius-sm);
+  background:var(--surface-white);color:var(--semantic-neutral);
+  font-size:11px;font-weight:500;line-height:1.4;
+  opacity:0;visibility:hidden;transition:.15s ease;pointer-events:none;white-space:nowrap
+}
+.tooltip-mini-bubble::after{
+  content:"";position:absolute;left:50%;top:100%;width:7px;height:7px;
+  background:var(--surface-white);border-right:1px solid var(--surface-soft);
+  border-bottom:1px solid var(--surface-soft);transform:translate(-50%,-4px) rotate(45deg)
+}
+.tooltip-mini:hover .tooltip-mini-bubble,
+.tooltip-mini:focus-within .tooltip-mini-bubble{
+  opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)
+}
+
+
+/* Unified Calendar / Date Picker preview */
+.cal-mini{
+  width:100%;
+  max-width:230px;
+  background:var(--surface-white);
+  border:1px solid var(--surface-soft);
+  border-radius:var(--radius-md);
+  padding:8px;
+}
+.cal-mini-head{
+  display:grid;
+  grid-template-columns:24px 1fr 24px;
+  align-items:center;
+  gap:4px;
+  margin-bottom:6px;
+}
+.cal-mini-head button{
+  width:24px;
+  height:24px;
+  border:1px solid var(--surface-soft);
+  border-radius:var(--radius-sm);
+  background:var(--surface-white);
+  cursor:pointer;
+}
+.cal-mini-title{
+  text-align:center;
+  color:var(--dark-navy);
+  font-size:10px;
+  font-weight:700;
+}
+.cal-mini-week,.cal-mini-days{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:2px;
+}
+.cal-mini-week span{
+  display:grid;
+  place-items:center;
+  min-height:18px;
+  color:var(--semantic-neutral);
+  font-size:8px;
+  font-weight:700;
+}
+.cal-mini-week span:first-child{color:var(--semantic-danger)}
+.cal-mini-day{
+  aspect-ratio:1/1;
+  border:1px solid transparent;
+  border-radius:50%;
+  background:transparent;
+  color:var(--text-charcoal);
+  font:500 8px Pretendard,sans-serif;
+  cursor:pointer;
+  padding:0;
+}
+.cal-mini-day:hover{background:var(--surface-bg);border-color:var(--surface-soft)}
+.cal-mini-day.other{color:var(--surface-soft)}
+.cal-mini-day.today{border-color:var(--accent-cyan);color:var(--dark-navy);font-weight:700}
+.cal-mini-day.single,
+.cal-mini-day.start,
+.cal-mini-day.end{
+  background:var(--dark-navy);
+  color:var(--surface-white);
+  font-weight:700;
+}
+.cal-mini-day.range{
+  background:var(--surface-bg);
+  border-radius:var(--radius-sm);
+  color:var(--dark-navy);
+}
+.cal-mini-summary{
+  margin-bottom:6px;
+  color:var(--semantic-neutral);
+  font-size:9px;
+}
+
+
+.empty-demo{width:100%;display:grid;gap:10px;justify-items:center}
+.empty-switch{display:flex;gap:6px;justify-content:center}
+.empty-switch button{
+  padding:5px 9px;border:1px solid var(--surface-soft);border-radius:999px;
+  background:var(--surface-white);font-size:9px;font-weight:700;cursor:pointer
+}
+.empty-switch button.active{background:var(--dark-navy);border-color:var(--dark-navy);color:var(--surface-white)}
+.empty-visual-mini{
+  position:relative;
+  width:170px;
+  height:82px;
+}
+.empty-card-mini{
+  position:absolute;
+  left:50%;
+  border:1px solid var(--surface-soft);
+  border-radius:12px;
+  background:var(--surface-white);
+}
+.empty-card-mini.back-1{
+  top:0;width:130px;height:40px;transform:translateX(-50%);opacity:.62;
+}
+.empty-card-mini.back-2{
+  top:9px;width:140px;height:42px;transform:translateX(-50%);opacity:.78;
+}
+.empty-card-mini.front{
+  top:18px;width:166px;height:48px;transform:translateX(-50%);opacity:1;
+}
+.empty-card-mini .ph{
+  position:absolute;background:#EEF2F4;border-radius:999px;
+}
+.empty-card-mini .ph.icon{
+  left:12px;top:12px;width:24px;height:24px;border-radius:6px;
+}
+.empty-card-mini .ph.line-1{
+  left:46px;top:14px;width:72px;height:7px;
+}
+.empty-card-mini .ph.line-2{
+  left:46px;top:26px;width:56px;height:6px;
+}
+.empty-message{display:grid;gap:3px;justify-items:center;text-align:center}
+.empty-message strong{font-size:11px;font-weight:700}
+.empty-message.navy strong{color:var(--dark-navy)}
+.empty-message.cyan strong{color:var(--accent-cyan)}
+.empty-message small{color:var(--semantic-neutral);font-size:9px}
+
+/* Navigation Sidebar */
+.sidebar-demo{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+.sidebar-shell{
+  width:220px;
+  min-height:250px;
+  padding:12px;
+  border:1px solid var(--surface-soft);
+  border-radius:var(--radius-md);
+  background:var(--surface-white);
+}
+.sidebar-brand{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:4px 6px 12px;
+  margin-bottom:8px;
+  border-bottom:1px solid var(--surface-soft);
+}
+.sidebar-brand-mark{
+  width:24px;
+  height:24px;
+  border-radius:7px;
+  background:var(--dark-navy);
+}
+.sidebar-brand strong{
+  color:var(--dark-navy);
+  font-size:11px;
+}
+.sidebar-group-label{
+  padding:8px 8px 5px;
+  color:var(--semantic-neutral);
+  font-size:8px;
+  font-weight:700;
+  letter-spacing:.04em;
+}
+.sidebar-item{
+  width:100%;
+  min-height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:0 9px;
+  border:0;
+  border-radius:var(--radius-sm);
+  background:transparent;
+  color:var(--text-charcoal);
+  font:600 10px Pretendard,sans-serif;
+  text-align:left;
+  cursor:pointer;
+}
+.sidebar-item:hover{
+  background:var(--surface-bg);
+}
+.sidebar-item.active{
+  background:var(--dark-navy);
+  color:var(--surface-white);
+}
+.sidebar-item .left{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.sidebar-icon{
+  width:14px;
+  height:14px;
+  border:1px solid currentColor;
+  border-radius:4px;
+  opacity:.85;
+}
+.sidebar-chevron{
+  font-size:10px;
+  transition:transform .15s ease;
+}
+.sidebar-item[aria-expanded="true"] .sidebar-chevron{
+  transform:rotate(90deg);
+}
+.sidebar-submenu{
+  display:grid;
+  gap:2px;
+  margin:3px 0 5px 24px;
+}
+.sidebar-submenu[hidden]{
+  display:none;
+}
+.sidebar-subitem{
+  min-height:29px;
+  display:flex;
+  align-items:center;
+  padding:0 8px;
+  border-radius:var(--radius-sm);
+  color:var(--semantic-neutral);
+  font-size:9px;
+  cursor:pointer;
+}
+.sidebar-subitem:hover{
+  background:var(--surface-bg);
+  color:var(--dark-navy);
+}
+.sidebar-subitem.active{
+  color:var(--accent-cyan);
+  font-weight:700;
+}
+
+
+/* Loading State — Card Stack Cycling */
+.loading-card-demo{
+  width:100%;
+  display:grid;
+  justify-items:center;
+  gap:8px;
+}
+.loading-card-stage{
+  position:relative;
+  width:170px;
+  height:82px;
+  perspective:760px;
+}
+.loading-state-card{
+  position:absolute;
+  left:50%;
+  width:166px;
+  height:48px;
+  border:1px solid var(--surface-soft);
+  border-radius:12px;
+  background:var(--surface-white);
+  transform-origin:center bottom;
+  backface-visibility:hidden;
+  will-change:transform,opacity;
+}
+.loading-state-card::before{
+  content:"";
+  position:absolute;
+  left:12px;
+  top:12px;
+  width:24px;
+  height:24px;
+  border-radius:6px;
+  background:#EEF2F4;
+}
+.loading-state-card::after{
+  content:"";
+  position:absolute;
+  left:46px;
+  top:14px;
+  width:72px;
+  height:7px;
+  border-radius:999px;
+  background:#EEF2F4;
+  box-shadow:0 12px 0 -1px #EEF2F4;
+}
+.loading-state-card:nth-child(1){
+  animation:loading-card-one 3.6s cubic-bezier(.4,0,.2,1) infinite;
+}
+.loading-state-card:nth-child(2){
+  animation:loading-card-two 3.6s cubic-bezier(.4,0,.2,1) infinite;
+}
+.loading-state-card:nth-child(3){
+  animation:loading-card-three 3.6s cubic-bezier(.4,0,.2,1) infinite;
+}
+.loading-card-title{
+  color:var(--accent-cyan);
+  font-size:11px;
+  font-weight:700;
+  text-align:center;
+}
+.loading-card-help{
+  color:var(--semantic-neutral);
+  font-size:9px;
+  text-align:center;
+}
+@keyframes loading-card-one{
+  0%,26%{z-index:3;opacity:1;transform:translate(-50%,34px) scale(1) rotateX(0)}
+  31%{z-index:4;opacity:.2;transform:translate(-50%,23px) scale(1.02) rotateX(-72deg)}
+  34%,60%{z-index:1;opacity:.52;transform:translate(-50%,0) scale(.82) rotateX(0)}
+  66%,93%{z-index:2;opacity:.76;transform:translate(-50%,17px) scale(.91) rotateX(0)}
+  100%{z-index:3;opacity:1;transform:translate(-50%,34px) scale(1) rotateX(0)}
+}
+@keyframes loading-card-two{
+  0%,26%{z-index:2;opacity:.76;transform:translate(-50%,17px) scale(.91) rotateX(0)}
+  34%,60%{z-index:3;opacity:1;transform:translate(-50%,34px) scale(1) rotateX(0)}
+  65%{z-index:4;opacity:.2;transform:translate(-50%,23px) scale(1.02) rotateX(-72deg)}
+  68%,93%{z-index:1;opacity:.52;transform:translate(-50%,0) scale(.82) rotateX(0)}
+  100%{z-index:2;opacity:.76;transform:translate(-50%,17px) scale(.91) rotateX(0)}
+}
+@keyframes loading-card-three{
+  0%,26%{z-index:1;opacity:.52;transform:translate(-50%,0) scale(.82) rotateX(0)}
+  34%,60%{z-index:2;opacity:.76;transform:translate(-50%,17px) scale(.91) rotateX(0)}
+  68%,93%{z-index:3;opacity:1;transform:translate(-50%,34px) scale(1) rotateX(0)}
+  98%{z-index:4;opacity:.2;transform:translate(-50%,23px) scale(1.02) rotateX(-72deg)}
+  100%{z-index:1;opacity:.52;transform:translate(-50%,0) scale(.82) rotateX(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  .loading-state-card{animation:none}
+  .loading-state-card:nth-child(1){z-index:3;opacity:1;transform:translate(-50%,34px) scale(1)}
+  .loading-state-card:nth-child(2){z-index:2;opacity:.76;transform:translate(-50%,17px) scale(.91)}
+  .loading-state-card:nth-child(3){z-index:1;opacity:.52;transform:translate(-50%,0) scale(.82)}
+}
+
+
+/* Unified System States */
+.state-visual-mini{
+  position:relative;
+  width:170px;
+  height:82px;
+}
+.state-card-mini{
+  position:absolute;
+  left:50%;
+  border:1px solid var(--surface-soft);
+  border-radius:12px;
+  background:var(--surface-white);
+  transform:translateX(-50%);
+}
+.state-card-mini.back-1{top:0;width:130px;height:40px;opacity:.62}
+.state-card-mini.back-2{top:9px;width:140px;height:42px;opacity:.78}
+.state-card-mini.front{top:18px;width:166px;height:48px;opacity:1}
+.state-card-mini .ph{
+  position:absolute;
+  background:#EEF2F4;
+  border-radius:999px;
+}
+.state-card-mini .ph.icon{
+  left:12px;top:12px;width:24px;height:24px;border-radius:6px;
+}
+.state-card-mini .ph.line-1{
+  left:46px;top:14px;width:72px;height:7px;
+}
+.state-card-mini .ph.line-2{
+  left:46px;top:26px;width:56px;height:6px;
+}
+.state-message{
+  display:grid;
+  gap:3px;
+  justify-items:center;
+  text-align:center;
+}
+.state-message strong{font-size:11px;font-weight:700}
+.state-message small{color:var(--semantic-neutral);font-size:9px}
+.state-message.error strong{color:var(--semantic-danger)}
+.state-error-mark{
+  position:absolute;
+  right:13px;
+  top:10px;
+  width:22px;
+  height:22px;
+  display:grid;
+  place-items:center;
+  border:1.5px solid var(--semantic-danger);
+  border-radius:50%;
+  color:var(--semantic-danger);
+  font-size:12px;
+  font-weight:700;
+  background:var(--surface-white);
+}
+
+
+/* Error State — enlarged final visual */
+.error-final-demo{
+  width:100%;
+  display:grid;
+  justify-items:center;
+  gap:10px;
+}
+.error-final-visual{
+  position:relative;
+  width:170px;
+  height:82px;
+}
+.error-final-card{
+  position:absolute;
+  left:50%;
+  border:1px solid var(--surface-soft);
+  border-radius:14px;
+  background:var(--surface-white);
+  transform:translateX(-50%);
+}
+.error-final-card.back-1{
+  top:0;
+  width:130px;
+  height:40px;
+  opacity:.62;
+}
+.error-final-card.back-2{
+  top:9px;
+  width:140px;
+  height:42px;
+  opacity:.78;
+}
+.error-final-card.front{
+  top:18px;
+  width:166px;
+  height:48px;
+}
+.error-final-placeholder{
+  position:absolute;
+  background:#EEF2F4;
+  border-radius:999px;
+}
+.error-final-placeholder.icon{
+  left:12px;
+  top:12px;
+  width:24px;
+  height:24px;
+  border-radius:6px;
+}
+.error-final-placeholder.line-1{
+  left:46px;
+  top:14px;
+  width:52px;
+  height:7px;
+}
+.error-final-placeholder.line-2{
+  left:46px;
+  top:26px;
+  width:36px;
+  height:6px;
+}
+.error-final-mark{
+  position:absolute;
+  right:12px;
+  top:10px;
+  width:22px;
+  height:22px;
+  display:grid;
+  place-items:center;
+  border:1.5px solid var(--semantic-danger);
+  border-radius:50%;
+  color:var(--semantic-danger);
+  background:var(--surface-white);
+  font-size:12px;
+  font-weight:700;
+  line-height:1;
+}
+.error-final-message{
+  display:grid;
+  gap:5px;
+  justify-items:center;
+  text-align:center;
+}
+.error-final-message strong{
+  color:var(--semantic-danger);
+  font-size:11px;
+  font-weight:700;
+}
+.error-final-message small{
+  color:var(--semantic-neutral);
+  font-size:9px;
+}
+
+
+/* DESIGN.md core components */
+.core-card-demo{width:180px;padding:14px;border:1px solid var(--surface-soft);border-radius:14px;background:var(--surface-white)}
+.core-card-label{color:var(--accent-cyan);font-size:8px;font-weight:700}
+.core-card-title{margin-top:5px;color:var(--dark-navy);font-size:11px;font-weight:700}
+.core-card-copy{margin-top:4px;color:var(--semantic-neutral);font-size:8px;line-height:1.45}
+
+.button-demo{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.btn-core{min-height:32px;padding:0 11px;border-radius:var(--radius-md);font:700 9px Pretendard,sans-serif;cursor:pointer}
+.btn-primary{border:1px solid var(--accent-cyan);background:var(--accent-cyan);color:var(--surface-white)}
+.btn-secondary{border:1px solid var(--surface-soft);background:var(--surface-white);color:var(--text-charcoal)}
+.btn-dark{border:1px solid var(--dark-navy);background:var(--dark-navy);color:var(--surface-white)}
+.btn-text{border:0;background:transparent;color:var(--accent-cyan)}
+
+.table-demo{width:220px;border:1px solid var(--surface-soft);border-radius:10px;overflow:hidden}
+.table-demo table{width:100%;border-collapse:collapse;font-size:8px}
+.table-demo th{padding:7px;background:var(--surface-bg);color:var(--text-charcoal);text-align:center}
+.table-demo td{padding:7px;border-top:1px solid var(--surface-soft);color:var(--text-charcoal)}
+.table-demo td:first-child{text-align:left}.table-demo td:last-child{text-align:right}
+
+.badge-demo{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.badge-core{padding:4px 7px;border-radius:999px;font-size:8px;font-weight:700}
+.badge-brand{background:#E7F6F7;color:var(--accent-cyan)}
+.badge-success{background:#EAF4EA;color:#2E7D32}
+.badge-danger{background:#FBEAEA;color:#C62828}
+.badge-warning{background:#FFF4DE;color:#B36B00}
+.badge-neutral{background:var(--surface-bg);color:var(--semantic-neutral)}
+
+.notice-demo{width:210px;padding:12px 14px;border:1px solid var(--surface-soft);border-radius:14px;background:var(--surface-white)}
+.notice-title{display:flex;align-items:center;gap:6px;color:var(--dark-navy);font-size:10px;font-weight:700}
+.notice-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-cyan)}
+.notice-copy{margin-top:5px;color:var(--semantic-neutral);font-size:8px;line-height:1.45}
+
+.metric-demo{width:190px;padding:14px;border:1px solid var(--surface-soft);border-radius:14px;background:var(--surface-white)}
+.metric-label{color:var(--semantic-neutral);font-size:8px}
+.metric-value{margin-top:4px;color:var(--dark-navy);font-size:20px;font-weight:700}
+.metric-context{margin-top:2px;color:var(--semantic-neutral);font-size:8px}
+.metric-status{margin-top:6px;color:#2E7D32;font-size:8px;font-weight:700}
+
+.input-demo{width:210px}
+.input-label{display:block;margin-bottom:5px;color:var(--text-charcoal);font-size:9px;font-weight:700}
+.input-control{width:100%;height:36px;padding:0 10px;border:1px solid var(--surface-soft);border-radius:var(--radius-md);background:var(--surface-white);color:var(--text-charcoal);font:500 9px Pretendard,sans-serif}
+.input-help{margin-top:5px;color:var(--semantic-neutral);font-size:8px}
+
+.nav-demo{display:flex;gap:6px;align-items:center}
+.nav-link{padding:6px 8px;border-radius:var(--radius-sm);color:var(--semantic-neutral);font-size:9px;font-weight:600}
+.nav-link.active{background:var(--surface-bg);color:var(--accent-cyan);font-weight:700}
+
+/* Catalog Selection List used as sidebar navigation */
+.catalog-nav-demo{width:230px;height:220px;overflow-y:auto;border:1px solid var(--surface-soft);border-radius:var(--radius-md);background:var(--surface-white);scrollbar-width:thin}
+.catalog-nav-section{border-bottom:1px solid var(--surface-soft)}
+.catalog-nav-section:last-child{border-bottom:0}
+.catalog-nav-header{position:sticky;top:0;z-index:2;width:100%;min-height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 9px;border:0;border-bottom:1px solid var(--surface-soft);background:var(--surface-white);color:var(--dark-navy);font:700 9px Pretendard,sans-serif;cursor:pointer}
+.catalog-nav-chevron{color:var(--semantic-neutral);font-size:11px;transition:transform .15s ease}
+.catalog-nav-header[aria-expanded="false"] .catalog-nav-chevron{transform:rotate(180deg)}
+.catalog-nav-list{display:grid;padding:3px 6px 6px}
+.catalog-nav-list[hidden]{display:none}
+.catalog-nav-item{min-height:29px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:0 7px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--text-charcoal);font:500 8px Pretendard,sans-serif;text-align:left;cursor:pointer}
+.catalog-nav-item:hover{background:var(--surface-bg);color:var(--dark-navy)}
+.catalog-nav-item.active{background:var(--surface-bg);color:var(--accent-cyan);font-weight:700}
+.catalog-nav-count{color:var(--semantic-neutral);font-size:8px}
+.catalog-nav-item.active .catalog-nav-count{color:var(--accent-cyan)}
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1>VATOS HTML 컴포넌트 전체 미리보기</h1>
+<p class="desc">DESIGN.md 공통 컴포넌트와 HTML 전용 확정 컴포넌트를 한 화면에서 확인합니다.</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>분류</th>
+<th>컴포넌트</th>
+<th>정의 내용</th>
+<th>실행 가능한 미리보기</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Core / DESIGN.md</td>
+<td class="name">Input Fields</td>
+<td>검색 · 필터 · 입력 목적을 명확하게<br/>radius-md와 충분한 내부 여백</td>
+<td class="preview-cell"><div class="preview"><div class="input-demo">
+<label class="input-label">검색어</label>
+<input aria-label="검색어" class="input-control" value="컴포넌트 검색"/>
+<div class="input-help">짧고 구체적인 Placeholder를 사용합니다.</div>
+</div></div></td>
+</tr><tr>
+<td>Core / DESIGN.md</td>
+<td class="name">Navigation</td>
+<td>현재 위치 또는 선택 상태를 시각적으로 구분<br/>짧고 명확한 메뉴명</td>
+<td class="preview-cell"><div class="preview"><div class="nav-demo">
+<span class="nav-link active">Overview</span>
+<span class="nav-link">Components</span>
+<span class="nav-link">Guides</span>
+</div></div></td>
+</tr><tr>
+<td>Core / DESIGN.md</td>
+<td class="name">Metric Blocks</td>
+<td>Label · Value · Unit · Context · Status<br/>단위와 비교 기준을 함께 표시</td>
+<td class="preview-cell"><div class="preview"><div class="metric-demo">
+<div class="metric-label">처리 완료</div>
+<div class="metric-value">1,248<span style="font-size:9px">건</span></div>
+<div class="metric-context">2026년 7월 기준</div>
+<div class="metric-status">전월 대비 +8.4%</div>
+</div></div></td>
+</tr><tr>
+<td>Core / DESIGN.md</td>
+<td class="name">Notice Boxes</td>
+<td>안내 · 참고 · 주의 정보를 본문에서 분리<br/>얇은 보더와 절제된 Accent</td>
+<td class="preview-cell"><div class="preview"><div class="notice-demo">
+<div class="notice-title"><span class="notice-dot"></span>검토 안내</div>
+<div class="notice-copy">중요한 안내만 짧은 제목과 1~3개의 설명 문장으로 구성합니다.</div>
+</div></div></td>
+</tr><tr>
+<td>Core / DESIGN.md</td>
+<td class="name">Badges / Tags</td>
+<td>Brand · Success · Danger · Warning · Info · Neutral<br/>색상과 텍스트를 함께 사용</td>
+<td class="preview-cell"><div class="preview"><div class="badge-demo">
+<span class="badge-core badge-brand">선택</span>
+<span class="badge-core badge-success">완료</span>
+<span class="badge-core badge-danger">오류</span>
+<span class="badge-core badge-warning">검토</span>
+<span class="badge-core badge-neutral">일반</span>
+</div></div></td>
+</tr><tr>
+<td>Core / DESIGN.md</td>
+<td class="name">Tables</td>
+<td>헤더 중앙 · 긴 텍스트 왼쪽 · 수치 오른쪽<br/>1px Soft Gray 보더</td>
+<td class="preview-cell"><div class="preview"><div class="table-demo"><table>
+<thead><tr><th>항목</th><th>상태</th><th>건수</th></tr></thead>
+<tbody><tr><td>문서 검토</td><td style="text-align:center">완료</td><td>24</td></tr>
+<tr><td>승인 대기</td><td style="text-align:center">대기</td><td>8</td></tr></tbody>
+</table></div></div></td>
+</tr><tr>
+<td>Core / DESIGN.md</td>
+<td class="name">Buttons</td>
+<td>Primary · Secondary · Dark<br/>최소 높이 42px 권장</td>
+<td class="preview-cell"><div class="preview"><div class="button-demo">
+<button class="btn-core btn-primary">Primary</button>
+<button class="btn-core btn-secondary">Secondary</button>
+<button class="btn-core btn-dark">Dark</button>
+
+</div></div></td>
+</tr><tr>
+<td>Core / DESIGN.md</td>
+<td class="name">Cards</td>
+<td>Summary · Metric · Status · Feature · Comparison<br/>한 카드에는 하나의 주제</td>
+<td class="preview-cell"><div class="preview"><div class="core-card-demo">
+<div class="core-card-label">SUMMARY</div>
+<div class="core-card-title">하나의 주제를 명확하게</div>
+<div class="core-card-copy">제목, 핵심값, 설명, 보조 정보를 일관된 간격으로 구성합니다.</div>
+</div></div></td>
+</tr><tr>
+<td>Form / Overlay</td>
+<td class="name">Dropdown</td>
+<td>Field Trigger<br/>Icon Trigger<br/>선택 후 자동 닫기</td>
+<td class="preview-cell">
+<div class="preview">
+<p class="caption">직접 눌러서 옵션을 선택해봐.</p>
+<div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+<div class="dd" data-dd="">
+<button aria-expanded="false" class="dd-trigger dd-field" type="button">
+<span data-label="">진행중</span><span class="chev"></span>
+</button>
+<div class="dd-panel">
+<button class="dd-option" data-value="미착수">미착수</button>
+<button class="dd-option selected" data-value="진행중">진행중</button>
+<button class="dd-option" data-value="완료">완료</button>
+</div>
+</div>
+<div class="dd icon" data-dd="">
+<button aria-expanded="false" aria-label="필터" class="dd-trigger dd-icon" type="button">☷</button>
+<div class="dd-panel">
+<button class="dd-option selected" data-value="전체">전체</button>
+<button class="dd-option" data-value="Document">Document</button>
+<button class="dd-option" data-value="Project">Project</button>
+<button class="dd-option" data-value="Log">Log</button>
+</div>
+</div>
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td>Navigation</td>
+<td class="name">Tabs</td>
+<td>Pill<br/>Underline<br/>Folder / Index</td>
+<td class="preview-cell">
+<div class="preview tabs-demo">
+<div class="pills" data-tabs="">
+<button class="pill active">전체</button><button class="pill">문서</button><button class="pill">프로젝트</button>
+</div>
+<div class="underline" data-tabs="">
+<button>Overview</button><button class="active">Detail</button><button>History</button>
+</div>
+<div>
+<div class="folder-tabs" data-folder-tabs="">
+<button class="folder-tab active" data-content="기본 정보 영역">기본</button>
+<button class="folder-tab" data-content="설정 정보 영역">설정</button>
+<button class="folder-tab" data-content="권한 정보 영역">권한</button>
+</div>
+<div class="folder-content" data-folder-content="">기본 정보 영역</div>
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td>Data Selection</td>
+<td class="name">Compact Selection List</td>
+<td>단일 선택<br/>선택 항목 Bold<br/>Type 필터 조합</td>
+<td class="preview-cell">
+<div class="preview">
+<div class="selection">
+<div class="sel-head">
+<span>ITEM LIST</span>
+<div class="filter-dd" id="filter-dd">
+<button aria-label="Type 필터" class="filter-btn" type="button">☷</button>
+<div class="filter-menu">
+<button class="dd-option selected" data-filter="all">전체</button>
+<button class="dd-option" data-filter="document">Document</button>
+<button class="dd-option" data-filter="project">Project</button>
+<button class="dd-option" data-filter="log">Log</button>
+</div>
+</div>
+</div>
+<div class="sel-list" id="sel-list">
+<button aria-selected="true" class="sel-item" data-type="document"><span>ITEM-0001</span><span class="type">Document</span></button>
+<button aria-selected="false" class="sel-item" data-type="project"><span>ITEM-0002</span><span class="type">Project</span></button>
+<button aria-selected="false" class="sel-item" data-type="log"><span>ITEM-0003</span><span class="type">Log</span></button>
+<button aria-selected="false" class="sel-item" data-type="document"><span>ITEM-0004</span><span class="type">Document</span></button>
+</div>
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td>Data Selection</td>
+<td class="name">Catalog Selection List</td>
+<td>분류 그룹 · Sticky Header · 내부 스크롤<br/>접기·펼치기와 Navigation 활용 지원</td>
+<td class="preview-cell">
+<div class="preview">
+<div class="catalog-nav-demo">
+<section class="catalog-nav-section">
+<button aria-expanded="true" class="catalog-nav-header" type="button">
+<span>FORMS</span><span class="catalog-nav-chevron">⌃</span>
+</button>
+<div class="catalog-nav-list">
+<button class="catalog-nav-item active"><span>Textarea</span><span class="catalog-nav-count">3</span></button>
+<button class="catalog-nav-item"><span>Input</span><span class="catalog-nav-count">5</span></button>
+<button class="catalog-nav-item"><span>Checkbox</span><span class="catalog-nav-count">4</span></button>
+</div>
+</section>
+<section class="catalog-nav-section">
+<button aria-expanded="true" class="catalog-nav-header" type="button">
+<span>NAVIGATION</span><span class="catalog-nav-chevron">⌃</span>
+</button>
+<div class="catalog-nav-list">
+<button class="catalog-nav-item"><span>Tabs</span><span class="catalog-nav-count">3</span></button>
+<button class="catalog-nav-item"><span>Dropdown</span><span class="catalog-nav-count">2</span></button>
+<button class="catalog-nav-item"><span>Sidebar</span><span class="catalog-nav-count">2</span></button>
+</div>
+</section>
+<section class="catalog-nav-section">
+<button aria-expanded="false" class="catalog-nav-header" type="button">
+<span>FEEDBACK</span><span class="catalog-nav-chevron">⌃</span>
+</button>
+<div class="catalog-nav-list" hidden="">
+<button class="catalog-nav-item"><span>Empty State</span><span class="catalog-nav-count">2</span></button>
+<button class="catalog-nav-item"><span>Error State</span><span class="catalog-nav-count">1</span></button>
+</div>
+</section>
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td>Form</td><td class="name">Checkbox</td>
+<td>Unchecked, Checked, Indeterminate, Disabled<br/>다중 선택 및 전체 선택</td>
+<td class="preview-cell"><div class="preview"><div class="chk-demo">
+<label class="chk-row"><input class="chk-native" type="checkbox"/><span class="chk-box"></span><span>Unchecked</span></label>
+<label class="chk-row"><input checked="" class="chk-native" type="checkbox"/><span class="chk-box"></span><span>Checked</span></label>
+<div aria-label="일부 선택 상태" class="chk-row"><span class="chk-box mixed"></span><span>Indeterminate <span class="chk-note">하위 선택 결과로만 결정</span></span></div>
+<label class="chk-row"><input class="chk-native" disabled="" type="checkbox"/><span class="chk-box"></span><span>Disabled</span></label>
+</div></div></td>
+</tr>
+<tr>
+<td>Form</td><td class="name">Radio</td>
+<td>단일 선택<br/>Vertical / Horizontal 그룹</td>
+<td class="preview-cell"><div class="preview"><div class="radio-demo">
+<label class="radio-row"><input class="radio-native" name="mode-demo" type="radio"/><span class="radio-mark"></span><span>Option 1</span></label>
+<label class="radio-row"><input class="radio-native" name="mode-demo" type="radio"/><span class="radio-mark"></span><span>Option 2</span></label>
+<label class="radio-row"><input checked="" class="radio-native" name="mode-demo" type="radio"/><span class="radio-mark"></span><span>Option 3</span></label>
+</div></div></td>
+</tr>
+<tr>
+<td>Feedback</td>
+<td class="name">Empty State</td>
+<td>Placeholder 카드 + 텍스트 안내<br/>Urban Navy 또는 Accent Cyan<br/>배경·보더 장식 최소화</td>
+<td class="preview-cell">
+<div class="preview">
+<div class="empty-demo" data-empty-demo="">
+<div class="empty-switch">
+<button class="active" data-empty-variant="navy" type="button">Navy</button>
+<button data-empty-variant="cyan" type="button">Cyan</button>
+</div>
+<div aria-hidden="true" class="empty-visual-mini">
+<div class="empty-card-mini back-1"></div>
+<div class="empty-card-mini back-2"></div>
+<div class="empty-card-mini front">
+<span class="ph icon"></span>
+<span class="ph line-1"></span>
+<span class="ph line-2"></span>
+</div>
+</div>
+<div class="empty-message navy">
+<strong>조회된 데이터가 없습니다.</strong>
+<small>조회 조건을 변경한 후 다시 시도하세요.</small>
+</div>
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td>Feedback</td>
+<td class="name">Error State</td>
+<td>Placeholder 카드 + 오류 표시<br/>Semantic Danger 제목<br/>보조 문구는 Neutral</td>
+<td class="preview-cell">
+<div class="preview">
+<div class="error-final-demo" role="alert">
+<div aria-hidden="true" class="error-final-visual">
+<div class="error-final-card back-1"></div>
+<div class="error-final-card back-2"></div>
+<div class="error-final-card front">
+<span class="error-final-placeholder icon"></span>
+<span class="error-final-placeholder line-1"></span>
+<span class="error-final-placeholder line-2"></span>
+<span class="error-final-mark">!</span>
+</div>
+</div>
+<div class="error-final-message">
+<strong>데이터를 불러오지 못했습니다.</strong>
+<small>잠시 후 다시 시도하세요.</small>
+</div>
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td>Feedback</td>
+<td class="name">Loading State</td>
+<td>겹친 카드 순환 애니메이션<br/>Accent Cyan 상태 제목<br/>대기 안내 문구</td>
+<td class="preview-cell">
+<div class="preview">
+<div aria-live="polite" class="loading-card-demo" role="status">
+<div aria-hidden="true" class="loading-card-stage">
+<div class="loading-state-card"></div>
+<div class="loading-state-card"></div>
+<div class="loading-state-card"></div>
+</div>
+<div class="loading-card-title">데이터를 불러오고 있습니다.</div>
+<div class="loading-card-help">잠시만 기다려 주세요.</div>
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td>Feedback</td><td class="name">Toast</td>
+<td>도형·배경 없음<br/>Urban Navy + Bold 텍스트<br/>일시 표시</td>
+<td class="preview-cell"><div class="preview"><div class="toast-demo">
+<button class="toast-trigger" type="button">Toast 실행</button>
+<span aria-live="polite" class="toast-message">저장되었습니다.</span>
+</div></div></td>
+</tr>
+<tr>
+<td>Navigation</td><td class="name">Pagination</td>
+<td>Previous / Next<br/>현재 페이지 강조<br/>비활성 상태</td>
+<td class="preview-cell"><div class="preview"><div class="pagination-demo" data-pagination="">
+<button class="page-btn" data-step="prev" type="button">‹</button>
+<button class="page-btn active" data-page="1" type="button">1</button>
+<button class="page-btn" data-page="2" type="button">2</button>
+<button class="page-btn" data-page="3" type="button">3</button>
+<button class="page-btn" data-step="next" type="button">›</button>
+</div></div></td>
+</tr>
+<tr>
+<td>Overlay</td>
+<td class="name">Tooltip</td>
+<td>Hover / Focus 표시<br/>Mouse out / Blur 시 숨김<br/>짧은 보조 설명</td>
+<td class="preview-cell">
+<div class="preview">
+<div class="tooltip-mini">
+<button aria-describedby="tooltip-mini-text" class="tooltip-mini-trigger" type="button">도움말</button>
+<div class="tooltip-mini-bubble" id="tooltip-mini-text" role="tooltip">This is a simple tooltip</div>
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<td>Form</td>
+<td class="name">Calendar / Date Picker</td>
+<td>자동 선택 모드<br/>1개 선택 = 단일 조회<br/>2개 선택 = 기간 조회<br/>재클릭 = 선택 해제</td>
+<td class="preview-cell">
+<div class="preview">
+<div class="cal-mini" data-cal-mini="">
+<div class="cal-mini-summary" data-cal-summary="">날짜를 선택하세요</div>
+<div class="cal-mini-head">
+<button data-cal-prev="" type="button">‹</button>
+<div class="cal-mini-title" data-cal-title=""></div>
+<button data-cal-next="" type="button">›</button>
+</div>
+<div class="cal-mini-week">
+<span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+</div>
+<div class="cal-mini-days" data-cal-days=""></div>
+</div>
+</div>
+</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+<div class="note">
+    현재 확정: Dropdown, Tabs, Compact Selection List. Catalog Selection List는 시안 확인 단계입니다.
+  </div>
+</main>
+<script>
+document.querySelectorAll('[data-dd]').forEach(dd=>{
+  const trigger=dd.querySelector('.dd-trigger');
+  const options=[...dd.querySelectorAll('.dd-option')];
+  const label=dd.querySelector('[data-label]');
+
+  trigger.addEventListener('click',e=>{
+    e.stopPropagation();
+    const willOpen=!dd.classList.contains('open');
+    document.querySelectorAll('[data-dd].open').forEach(x=>x.classList.remove('open'));
+    dd.classList.toggle('open',willOpen);
+    trigger.setAttribute('aria-expanded',String(willOpen));
+  });
+
+  options.forEach(opt=>opt.addEventListener('click',()=>{
+    options.forEach(x=>x.classList.remove('selected'));
+    opt.classList.add('selected');
+    if(label) label.textContent=opt.dataset.value;
+    dd.classList.remove('open');
+    trigger.setAttribute('aria-expanded','false');
+  }));
+});
+
+document.querySelectorAll('[data-tabs]').forEach(group=>{
+  const buttons=[...group.querySelectorAll('button')];
+  buttons.forEach(btn=>btn.addEventListener('click',()=>{
+    buttons.forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+  }));
+});
+
+
+document.querySelectorAll('[data-folder-tabs]').forEach(group=>{
+  const buttons=[...group.querySelectorAll('.folder-tab')];
+  const content=group.parentElement.querySelector('[data-folder-content]');
+  buttons.forEach(btn=>btn.addEventListener('click',()=>{
+    buttons.forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    content.textContent=btn.dataset.content;
+  }));
+});
+
+const filterDD=document.getElementById('filter-dd');
+filterDD.querySelector('.filter-btn').addEventListener('click',e=>{
+  e.stopPropagation();
+  filterDD.classList.toggle('open');
+});
+const selItems=[...document.querySelectorAll('.sel-item')];
+selItems.forEach(item=>item.addEventListener('click',()=>{
+  selItems.forEach(x=>x.setAttribute('aria-selected','false'));
+  item.setAttribute('aria-selected','true');
+}));
+filterDD.querySelectorAll('[data-filter]').forEach(opt=>opt.addEventListener('click',()=>{
+  const value=opt.dataset.filter;
+  filterDD.querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('selected'));
+  opt.classList.add('selected');
+  selItems.forEach(item=>item.classList.toggle('hidden', value!=='all' && item.dataset.type!==value));
+  filterDD.classList.remove('open');
+}));
+
+document.addEventListener('click',()=>{
+  document.querySelectorAll('[data-dd].open').forEach(x=>x.classList.remove('open'));
+  filterDD.classList.remove('open');
+});
+
+document.querySelectorAll('.toast-trigger').forEach(button=>{
+  button.addEventListener('click',()=>{
+    const message=button.parentElement.querySelector('.toast-message');
+    message.classList.add('show');
+    clearTimeout(message._timer);
+    message._timer=setTimeout(()=>message.classList.remove('show'),1800);
+  });
+});
+document.querySelectorAll('[data-pagination]').forEach(group=>{
+  const pages=[...group.querySelectorAll('[data-page]')];
+  const prev=group.querySelector('[data-step="prev"]');
+  const next=group.querySelector('[data-step="next"]');
+  let current=1;
+  function setPage(page){
+    current=Math.max(1,Math.min(pages.length,page));
+    pages.forEach(btn=>btn.classList.toggle('active',Number(btn.dataset.page)===current));
+    prev.disabled=current===1;
+    next.disabled=current===pages.length;
+  }
+  pages.forEach(btn=>btn.addEventListener('click',()=>setPage(Number(btn.dataset.page))));
+  prev.addEventListener('click',()=>setPage(current-1));
+  next.addEventListener('click',()=>setPage(current+1));
+  setPage(1);
+});
+
+
+
+document.querySelectorAll('[data-cal-mini]').forEach(root=>{
+  const today=new Date();
+  let viewYear=today.getFullYear();
+  let viewMonth=today.getMonth();
+  let selected=[];
+
+  const title=root.querySelector('[data-cal-title]');
+  const summary=root.querySelector('[data-cal-summary]');
+  const days=root.querySelector('[data-cal-days]');
+
+  const key=d=>`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const same=(a,b)=>a&&b&&key(a)===key(b);
+  const stamp=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+  const fmt=d=>`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+
+  function updateSummary(){
+    if(selected.length===0) summary.textContent='날짜를 선택하세요';
+    else if(selected.length===1) summary.textContent=`단일 · ${fmt(selected[0])}`;
+    else summary.textContent=`기간 · ${fmt(selected[0])} ~ ${fmt(selected[1])}`;
+  }
+
+  function choose(date){
+    const idx=selected.findIndex(x=>same(x,date));
+    if(idx>=0) selected.splice(idx,1);
+    else if(selected.length<2) selected.push(date);
+    else selected=[date];
+    selected.sort((a,b)=>stamp(a)-stamp(b));
+    updateSummary();
+    render();
+  }
+
+  function render(){
+    title.textContent=`${viewYear}년 ${viewMonth+1}월`;
+    days.innerHTML='';
+    const firstDay=new Date(viewYear,viewMonth,1).getDay();
+    const currentLast=new Date(viewYear,viewMonth+1,0).getDate();
+    const previousLast=new Date(viewYear,viewMonth,0).getDate();
+
+    for(let i=0;i<42;i++){
+      let date,other=false;
+      if(i<firstDay){date=new Date(viewYear,viewMonth-1,previousLast-firstDay+i+1);other=true}
+      else if(i>=firstDay+currentLast){date=new Date(viewYear,viewMonth+1,i-(firstDay+currentLast)+1);other=true}
+      else date=new Date(viewYear,viewMonth,i-firstDay+1);
+
+      const b=document.createElement('button');
+      b.type='button';b.className='cal-mini-day';b.textContent=date.getDate();
+      if(other)b.classList.add('other');
+      if(same(date,today))b.classList.add('today');
+
+      const isFirst=selected[0]&&same(date,selected[0]);
+      const isSecond=selected[1]&&same(date,selected[1]);
+
+      if(selected.length===1&&isFirst)b.classList.add('single');
+      if(selected.length===2){
+        if(isFirst)b.classList.add('start');
+        if(isSecond)b.classList.add('end');
+        const t=stamp(date);
+        if(t>stamp(selected[0])&&t<stamp(selected[1]))b.classList.add('range');
+      }
+
+      b.addEventListener('click',()=>choose(date));
+      days.appendChild(b);
+    }
+  }
+
+  root.querySelector('[data-cal-prev]').addEventListener('click',()=>{
+    viewMonth--;if(viewMonth<0){viewMonth=11;viewYear--}render();
+  });
+  root.querySelector('[data-cal-next]').addEventListener('click',()=>{
+    viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++}render();
+  });
+
+  updateSummary();
+  render();
+});
+
+
+document.querySelectorAll('[data-empty-demo]').forEach(root=>{
+  const message=root.querySelector('.empty-message');
+  root.querySelectorAll('[data-empty-variant]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      root.querySelectorAll('[data-empty-variant]').forEach(x=>x.classList.remove('active'));
+      button.classList.add('active');
+      message.className='empty-message '+button.dataset.emptyVariant;
+    });
+  });
+});
+
+document.querySelectorAll('[data-sidebar-toggle]').forEach(toggle=>{
+  toggle.addEventListener('click',()=>{
+    const submenu=toggle.nextElementSibling;
+    const expanded=toggle.getAttribute('aria-expanded')==='true';
+    toggle.setAttribute('aria-expanded', String(!expanded));
+    submenu.hidden=expanded;
+  });
+});
+
+
+document.querySelectorAll('.catalog-nav-header').forEach(header=>{
+  header.addEventListener('click',()=>{
+    const list=header.nextElementSibling;
+    const expanded=header.getAttribute('aria-expanded')==='true';
+    header.setAttribute('aria-expanded',String(!expanded));
+    list.hidden=expanded;
+  });
+});
+document.querySelectorAll('.catalog-nav-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    document.querySelectorAll('.catalog-nav-item').forEach(x=>x.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
