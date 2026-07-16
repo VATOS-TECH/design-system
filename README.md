@@ -30,32 +30,12 @@ vatos-design-system/
 │
 ├─ assets/
 │  ├─ logos/
-│  │  ├─ vatos-logo-signature-slogan-on-dark.png
-│  │  ├─ vatos-logo-signature-slogan-on-light.png
-│  │  ├─ vatos-logo-symbol-only.png
-│  │  ├─ vatos-logo-symbol-wordmark-stacked.png
-│  │  └─ vatos-logo-wordmark-only.png
-│  │
 │  └─ themes/
-│     └─ vatos-theme-default-urban-navy.png
 │
 ├─ guides/
-│  ├─ ppt.md
-│  ├─ word.md
-│  ├─ html.md
-│  └─ theme.md
-│
 ├─ templates/
-│  ├─ vatos-excel-template.xlsx
-│  └─ vatos-word-template.docx
-│
 ├─ references/
-│  ├─ vatos-ppt-layout-library.pptx
-│  └─ vatos-ppt-layout-library.pptx
-│
 └─ examples/
-   ├─ vatos-ai-transformation.html
-   └─ vatos-company-profile.pdf
 ```
 
 ---
